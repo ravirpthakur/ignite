@@ -682,7 +682,7 @@ public class GridCacheProcessor extends GridProcessorAdapter {
             CacheType cacheType = cacheType(cacheName);
 
             if (cacheType != CacheType.USER && cfg.getDataRegionName() == null)
-                cfg.setDataRegionName(sharedCtx.database().systemDateRegionName());
+                cfg.setDataRegionName(GridCacheDatabaseSharedManager.systemDataRegionName());
 
             if (!cacheType.userCache())
                 stopSeq.addLast(cacheName);
@@ -3256,6 +3256,15 @@ public class GridCacheProcessor extends GridProcessorAdapter {
      */
     public <K, V> IgniteInternalCache<K, V> utilityCache() {
         return internalCacheEx(CU.UTILITY_CACHE_NAME);
+    }
+
+    /**
+     * Gets utility cache.
+     *
+     * @return Utility cache.
+     */
+    public <K, V> IgniteInternalCache<K, V> persistentUtilityCache() {
+        return internalCacheEx(CU.PERSISTENT_UTILITY_CACHE_NAME);
     }
 
     /**

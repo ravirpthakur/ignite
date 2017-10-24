@@ -99,6 +99,13 @@ public class IgfsIgniteMock implements IgniteEx {
     }
 
     /** {@inheritDoc} */
+    @Override public <K extends GridCacheUtilityKey, V> IgniteInternalCache<K, V> persistentUtilityCache() {
+        throwUnsupported();
+
+        return null;
+    }
+
+    /** {@inheritDoc} */
     @Nullable @Override public <K, V> IgniteInternalCache<K, V> cachex(@Nullable String name) {
         throwUnsupported();
 

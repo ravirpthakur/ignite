@@ -44,6 +44,13 @@ public interface IgniteEx extends Ignite {
     public <K extends GridCacheUtilityKey, V> IgniteInternalCache<K, V> utilityCache();
 
     /**
+     * Gets utility cache with enabled persistence.
+     *
+     * @return Utility cache.
+     */
+    public <K extends GridCacheUtilityKey, V> IgniteInternalCache<K, V> persistentUtilityCache();
+
+    /**
      * Gets the cache instance for the given name if one is configured or
      * <tt>null</tt> otherwise returning even non-public caches.
      *

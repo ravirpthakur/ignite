@@ -3317,6 +3317,20 @@ public class IgniteKernal implements IgniteEx, IgniteMXBean, Externalizable {
     }
 
     /** {@inheritDoc} */
+    @Override public <K extends GridCacheUtilityKey, V> IgniteInternalCache<K, V> persistentUtilityCache() {
+        guard();
+
+        try {
+            checkClusterState();
+
+            return ctx.cache().persistentUtilityCache();
+        }
+        finally {
+            unguard();
+        }
+    }
+
+    /** {@inheritDoc} */
     @Override public <K, V> IgniteInternalCache<K, V> cachex(String name) {
         CU.validateCacheName(name);
 

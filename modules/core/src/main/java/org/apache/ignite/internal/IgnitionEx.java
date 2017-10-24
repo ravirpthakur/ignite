@@ -69,6 +69,7 @@ import org.apache.ignite.configuration.PersistentStoreConfiguration;
 import org.apache.ignite.configuration.TransactionConfiguration;
 import org.apache.ignite.internal.binary.BinaryMarshaller;
 import org.apache.ignite.internal.managers.communication.GridIoPolicy;
+import org.apache.ignite.internal.processors.cache.persistence.GridCacheDatabaseSharedManager;
 import org.apache.ignite.internal.processors.datastructures.DataStructuresProcessor;
 import org.apache.ignite.internal.processors.igfs.IgfsThreadFactory;
 import org.apache.ignite.internal.processors.igfs.IgfsUtils;
@@ -2222,7 +2223,11 @@ public class IgnitionEx {
         public void initializeDefaultCacheConfiguration(IgniteConfiguration cfg) throws IgniteCheckedException {
             List<CacheConfiguration> cacheCfgs = new ArrayList<>();
 
-            cacheCfgs.add(utilitySystemCache());
+            cacheCfgs.add(systemCache(CU.UTILITY_CACHE_NAME, GridCacheDatabaseSharedManager.systemDataRegionName()));
+
+            if (CU.isPersistenceEnabled(cfg))
+                cacheCfgs.add(systemCache(CU.PERSISTENT_UTILITY_CACHE_NAME,
+                    GridCacheDatabaseSharedManager.systemPersistentDataRegionName()));
 
             if (IgniteComponentType.HADOOP.inClassPath())
                 cacheCfgs.add(CU.hadoopSystemCache());
@@ -2409,15 +2414,13 @@ public class IgnitionEx {
             }
         }
 
-        /**
-         * Creates utility system cache configuration.
-         *
-         * @return Utility system cache configuration.
-         */
-        private static CacheConfiguration utilitySystemCache() {
+        private static CacheConfiguration systemCache(
+            String name,
+            String dataRegionName
+        ) {
             CacheConfiguration cache = new CacheConfiguration();
 
-            cache.setName(CU.UTILITY_CACHE_NAME);
+            cache.setName(name);
             cache.setCacheMode(REPLICATED);
             cache.setAtomicityMode(TRANSACTIONAL);
             cache.setRebalanceMode(SYNC);
@@ -2426,6 +2429,7 @@ public class IgnitionEx {
             cache.setNodeFilter(CacheConfiguration.ALL_NODES);
             cache.setRebalanceOrder(-2); //Prior to user caches.
             cache.setCopyOnRead(false);
+            cache.setDataRegionName(dataRegionName);
 
             return cache;
         }

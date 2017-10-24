@@ -164,6 +164,9 @@ public class GridCacheUtils {
     /** System cache name. */
     public static final String UTILITY_CACHE_NAME = "ignite-sys-cache";
 
+    /** Persistent system cache name. */
+    public static final String PERSISTENT_UTILITY_CACHE_NAME = "ignite-persistent-sys-cache";
+
     /** */
     public static final String CONTINUOUS_QRY_LOG_CATEGORY = "org.apache.ignite.continuous.query";
 
@@ -1060,7 +1063,7 @@ public class GridCacheUtils {
      * @return {@code True} if this is utility system cache.
      */
     public static boolean isUtilityCache(String cacheName) {
-        return UTILITY_CACHE_NAME.equals(cacheName);
+        return UTILITY_CACHE_NAME.equals(cacheName) || PERSISTENT_UTILITY_CACHE_NAME.equals(cacheName);
     }
 
     /**
@@ -1705,10 +1708,17 @@ public class GridCacheUtils {
      * @return {@code true} if persistence is enabled for at least one data region, {@code false} if not.
      */
     public static boolean isPersistenceEnabled(IgniteConfiguration cfg) {
-        if (cfg.getDataStorageConfiguration() == null)
+        return isPersistenceEnabled(cfg.getDataStorageConfiguration());
+    }
+
+    /**
+     * @return {@code true} if persistence is enabled for at least one data region, {@code false} if not.
+     */
+    public static boolean isPersistenceEnabled(@Nullable DataStorageConfiguration dsCfg) {
+        if (dsCfg == null)
             return false;
 
-        DataRegionConfiguration dfltReg = cfg.getDataStorageConfiguration().getDefaultDataRegionConfiguration();
+        DataRegionConfiguration dfltReg = dsCfg.getDefaultDataRegionConfiguration();
 
         if (dfltReg == null)
             return false;
@@ -1716,7 +1726,7 @@ public class GridCacheUtils {
         if (dfltReg.isPersistenceEnabled())
             return true;
 
-        DataRegionConfiguration[] regCfgs = cfg.getDataStorageConfiguration().getDataRegionConfigurations();
+        DataRegionConfiguration[] regCfgs = dsCfg.getDataRegionConfigurations();
 
         if (regCfgs == null)
             return false;

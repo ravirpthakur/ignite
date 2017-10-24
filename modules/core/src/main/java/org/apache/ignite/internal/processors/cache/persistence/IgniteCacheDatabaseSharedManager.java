@@ -57,6 +57,7 @@ import org.apache.ignite.internal.processors.cache.persistence.tree.reuse.ReuseL
 import org.apache.ignite.internal.processors.cluster.IgniteChangeGlobalStateSupport;
 import org.apache.ignite.internal.util.typedef.F;
 import org.apache.ignite.internal.util.typedef.T2;
+import org.apache.ignite.internal.util.typedef.internal.CU;
 import org.apache.ignite.internal.util.typedef.internal.LT;
 import org.apache.ignite.internal.util.typedef.internal.U;
 import org.apache.ignite.lang.IgniteBiTuple;
@@ -74,6 +75,9 @@ public class IgniteCacheDatabaseSharedManager extends GridCacheSharedManagerAdap
     implements IgniteChangeGlobalStateSupport, CheckpointLockStateChecker {
     /** DataRegionConfiguration name reserved for internal caches. */
     static final String SYSTEM_DATA_REGION_NAME = "sysMemPlc";
+
+    /** DataRegionConfiguration name reserved for internal persisted caches. */
+    static final String SYSTEM_PERSISTENT_DATA_REGION_NAME = "sysPersistedMemPlc";
 
     /** Minimum size of memory chunk */
     private static final long MIN_PAGE_MEMORY_SIZE = 10 * 1024 * 1024;
@@ -218,36 +222,47 @@ public class IgniteCacheDatabaseSharedManager extends GridCacheSharedManagerAdap
 
         if (dataRegionCfgs != null) {
             for (DataRegionConfiguration dataRegionCfg : dataRegionCfgs)
-                addDataRegion(memCfg, dataRegionCfg, dataRegionCfg.getName());
+                addDataRegion(memCfg, dataRegionCfg);
         }
 
         addDataRegion(
             memCfg,
-            memCfg.getDefaultDataRegionConfiguration(),
-            memCfg.getDefaultDataRegionConfiguration().getName()
+            memCfg.getDefaultDataRegionConfiguration()
         );
 
         addDataRegion(
             memCfg,
             createSystemDataRegion(
+                SYSTEM_DATA_REGION_NAME,
                 memCfg.getSystemRegionInitialSize(),
-                memCfg.getSystemRegionMaxSize()
-            ),
-            SYSTEM_DATA_REGION_NAME
+                memCfg.getSystemRegionMaxSize(),
+                false
+            )
         );
+
+        if (CU.isPersistenceEnabled(memCfg)) {
+            addDataRegion(
+                memCfg,
+                createSystemDataRegion(
+                    SYSTEM_PERSISTENT_DATA_REGION_NAME,
+                    memCfg.getSystemRegionInitialSize(),
+                    memCfg.getSystemRegionMaxSize(),
+                    true
+                )
+            );
+        }
     }
 
     /**
      * @param dataStorageCfg Database config.
      * @param dataRegionCfg Data region config.
-     * @param dataRegionName Data region name.
      * @throws IgniteCheckedException If failed to initialize swap path.
      */
     private void addDataRegion(
         DataStorageConfiguration dataStorageCfg,
-        DataRegionConfiguration dataRegionCfg,
-        String dataRegionName
+        DataRegionConfiguration dataRegionCfg
     ) throws IgniteCheckedException {
+        String dataRegionName = dataRegionCfg.getName();
         String dfltMemPlcName = dataStorageCfg.getDefaultDataRegionConfiguration().getName();
 
         if (dfltMemPlcName == null)
@@ -315,15 +330,22 @@ public class IgniteCacheDatabaseSharedManager extends GridCacheSharedManagerAdap
     /**
      * @param sysCacheInitSize Initial size of PageMemory to be created for system cache.
      * @param sysCacheMaxSize Maximum size of PageMemory to be created for system cache.
+     * @param persistenceEnabled {@code true} if persistence should be enabled for this cache.
      *
      * @return {@link DataRegionConfiguration configuration} of DataRegion for system cache.
      */
-    private DataRegionConfiguration createSystemDataRegion(long sysCacheInitSize, long sysCacheMaxSize) {
+    private DataRegionConfiguration createSystemDataRegion(
+        String regionName,
+        long sysCacheInitSize,
+        long sysCacheMaxSize,
+        boolean persistenceEnabled
+    ) {
         DataRegionConfiguration res = new DataRegionConfiguration();
 
-        res.setName(SYSTEM_DATA_REGION_NAME);
+        res.setName(regionName);
         res.setInitialSize(sysCacheInitSize);
         res.setMaxSize(sysCacheMaxSize);
+        res.setPersistenceEnabled(persistenceEnabled);
 
         return res;
     }
@@ -507,10 +529,10 @@ public class IgniteCacheDatabaseSharedManager extends GridCacheSharedManagerAdap
                 "non-empty name.");
 
         if (observedNames.contains(regName))
-            throw new IgniteCheckedException("Two MemoryPolicies have the same name: " + regName);
+            throw new IgniteCheckedException("Two DataRegionConfiguration have the same name: " + regName);
 
-        if (SYSTEM_DATA_REGION_NAME.equals(regName))
-            throw new IgniteCheckedException("'" + SYSTEM_DATA_REGION_NAME + "' policy name is reserved for internal use.");
+        if (SYSTEM_DATA_REGION_NAME.equals(regName) || SYSTEM_PERSISTENT_DATA_REGION_NAME.equals(regName))
+            throw new IgniteCheckedException("'" + regName + "' data region name is reserved for internal use.");
 
         observedNames.add(regName);
     }
@@ -959,8 +981,15 @@ public class IgniteCacheDatabaseSharedManager extends GridCacheSharedManagerAdap
     /**
      * @return Name of DataRegionConfiguration for internal caches.
      */
-    public String systemDateRegionName() {
+    public static String systemDataRegionName() {
         return SYSTEM_DATA_REGION_NAME;
+    }
+
+    /**
+     * @return Name of DataRegionConfiguration for internal caches.
+     */
+    public static String systemPersistentDataRegionName() {
+        return SYSTEM_PERSISTENT_DATA_REGION_NAME;
     }
 
     /**
