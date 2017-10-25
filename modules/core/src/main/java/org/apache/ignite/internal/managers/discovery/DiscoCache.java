@@ -17,6 +17,12 @@
 
 package org.apache.ignite.internal.managers.discovery;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.processors.cluster.DiscoveryDataClusterState;
@@ -28,13 +34,6 @@ import org.apache.ignite.internal.util.typedef.internal.CU;
 import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.lang.IgniteProductVersion;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  *
@@ -95,6 +94,7 @@ public class DiscoCache {
      * @param cacheGrpAffNodes Affinity nodes by cache group ID.
      * @param nodeMap Node map.
      * @param alives Alive nodes.
+     * @param minNodeVer Minimum node version.
      */
     DiscoCache(
         AffinityTopologyVersion topVer,
@@ -109,7 +109,7 @@ public class DiscoCache {
         Map<Integer, List<ClusterNode>> cacheGrpAffNodes,
         Map<UUID, ClusterNode> nodeMap,
         Set<UUID> alives,
-        IgniteProductVersion minVer) {
+        IgniteProductVersion minNodeVer) {
         this.topVer = topVer;
         this.state = state;
         this.loc = loc;
@@ -122,7 +122,7 @@ public class DiscoCache {
         this.cacheGrpAffNodes = cacheGrpAffNodes;
         this.nodeMap = nodeMap;
         this.alives.addAll(alives);
-        minNodeVer = minVer;
+        this.minNodeVer = minNodeVer;
     }
 
     /**
@@ -316,17 +316,14 @@ public class DiscoCache {
     }
 
     /**
-     * Returns copy of discovery cache suitable for further reuse.
-     *
-     * @param ver Version.
-     * @param st State.
-     *
-     * @return Copy.
+     * @param ver Topology version.
+     * @param state Not {@code null} state if need override state, otherwise current state is used.
+     * @return Copy of discovery cache with new version.
      */
-    public DiscoCache copy(AffinityTopologyVersion ver, @Nullable DiscoveryDataClusterState st) {
+    public DiscoCache copy(AffinityTopologyVersion ver, @Nullable DiscoveryDataClusterState state) {
         return new DiscoCache(
             ver,
-            st == null ? state : st,
+            state == null ? this.state : state,
             loc,
             rmtNodes,
             allNodes,

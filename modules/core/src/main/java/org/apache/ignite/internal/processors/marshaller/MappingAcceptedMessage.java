@@ -17,9 +17,9 @@
 
 package org.apache.ignite.internal.processors.marshaller;
 
-import org.apache.ignite.internal.GridKernalContext;
 import org.apache.ignite.internal.managers.discovery.DiscoCache;
 import org.apache.ignite.internal.managers.discovery.DiscoveryCustomMessage;
+import org.apache.ignite.internal.managers.discovery.GridDiscoveryManager;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.lang.IgniteUuid;
@@ -63,7 +63,7 @@ public class MappingAcceptedMessage implements DiscoveryCustomMessage {
     }
 
     /** {@inheritDoc} */
-    @Nullable @Override public DiscoCache reuseDiscoCache(GridKernalContext ctx,
+    @Nullable @Override public DiscoCache createDiscoCache(GridDiscoveryManager mgr,
         AffinityTopologyVersion topVer, DiscoCache discoCache) {
         throw new UnsupportedOperationException();
     }

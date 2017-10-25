@@ -19,10 +19,9 @@ package org.apache.ignite.internal.processors.cache;
 
 import java.util.Collection;
 import java.util.Set;
-
-import org.apache.ignite.internal.GridKernalContext;
 import org.apache.ignite.internal.managers.discovery.DiscoCache;
 import org.apache.ignite.internal.managers.discovery.DiscoveryCustomMessage;
+import org.apache.ignite.internal.managers.discovery.GridDiscoveryManager;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.util.tostring.GridToStringInclude;
 import org.apache.ignite.internal.util.typedef.F;
@@ -78,9 +77,9 @@ public class DynamicCacheChangeBatch implements DiscoveryCustomMessage {
     }
 
     /** {@inheritDoc} */
-    @Nullable @Override public DiscoCache reuseDiscoCache(GridKernalContext ctx,
-        AffinityTopologyVersion topVer, DiscoCache discoCache) {
-        return ctx.discovery().reuseDiscoCache(this, topVer, discoCache);
+    @Override public DiscoCache createDiscoCache(GridDiscoveryManager mgr, AffinityTopologyVersion topVer,
+        DiscoCache discoCache) {
+        return mgr.createDiscoCacheOnCacheChange(topVer, discoCache);
     }
 
     /**
