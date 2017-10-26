@@ -118,7 +118,7 @@ public class ChangeGlobalStateMessage implements DiscoveryCustomMessage {
     /** {@inheritDoc} */
     @Override public DiscoCache createDiscoCache(GridDiscoveryManager mgr, AffinityTopologyVersion topVer,
         DiscoCache discoCache) {
-        return discoCache.copy(topVer, null);
+        return mgr.createDiscoCacheOnCacheChange(topVer, discoCache);
     }
 
     /**

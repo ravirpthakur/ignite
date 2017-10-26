@@ -3065,6 +3065,7 @@ public class GridDiscoveryManager extends GridManagerAdapter<DiscoverySpi> {
      *
      * @param topVer Topology version.
      * @param discoCache Current disco cache.
+     * @return New discovery cache.
      */
     public DiscoCache createDiscoCacheOnCacheChange(AffinityTopologyVersion topVer,
         DiscoCache discoCache) {
